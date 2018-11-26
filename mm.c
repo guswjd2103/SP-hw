@@ -37,6 +37,7 @@
 #define CHUNKSIZE (1<<12) /*extend heap by this amount /initial free blcok and heap extend of basic size*/
 /*#define SSIZE 24*/ /*6WORD to make code with explicilt list*/
 #define MAX(x,y) ((x)>(y)?(x) :(y))
+#define MIN(x,y) ((x)<(y)?(x) :(y))
 
 #define PACK(size, alloc) ((size)|(alloc)) /*pack a size and allocated bit into a word, integrate size and allocate bit that can be stored in header and footer*/
 #define GET(p) (*(unsigned int *)(p))/*p is void* type and GET : return the word by reading p's reference*/
@@ -247,19 +248,26 @@ void mm_free(void *ptr)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    void *oldptr = ptr;
-    void *newptr;
-    size_t copySize;
-    
-    newptr = mm_malloc(size);
-    if (newptr == NULL)
-      return NULL;
-    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
-    if (size < copySize)
-      copySize = size;
-    memcpy(newptr, oldptr, copySize);
-    mm_free(oldptr);
-    return newptr;
+    	void *oldptr = ptr;
+    	void *newptr;
+    	size_t copySize;
+    	if(oldptr ==NULL)
+		return mm_malloc(size);
+	if(size==0){
+		mm_free(oldptr);
+		return NULL;
+	}
+	
+   	newptr = mm_malloc(size);
+    	if (newptr == NULL)
+      		return NULL;
+    	/*copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);*/
+	copySize = MIN(size, GET_SIZE(HDRP(oldptr)) - SIZE_T_SIZE);
+    	if (size < copySize)
+      		copySize = size;
+    	memcpy(newptr, oldptr, copySize);
+    	mm_free(oldptr);
+    	return newptr;
 }
 
 
